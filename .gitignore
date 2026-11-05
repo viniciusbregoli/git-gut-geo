@@ -1,0 +1,9 @@
+node_modules/
+dist/
+# Fetched Plonk It content (CC BY-NC-SA 4.0) and the local SQLite database.
+# Personal use only: never commit or redistribute.
+data/
+.impeccable/mocks/
+.impeccable/review/
+.env
+*.log
