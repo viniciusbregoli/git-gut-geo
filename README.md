@@ -22,9 +22,9 @@ pnpm dev        # API on 127.0.0.1:4317, app on http://localhost:5317
 
 ## Content and licensing
 
-Clue content comes from [Plonk It](https://www.plonkit.net), licensed [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). A local script fetches it into `data/`, which is gitignored: fetched text and images are for personal use and are never committed to this repository. Every card credits its source guide.
+Clue content comes from [Plonk It](https://www.plonkit.net), licensed [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). It is fetched into `data/`, which is gitignored: fetched text and images are for personal use and are never committed to this repository. Every card credits its source guide. The fetch script is not part of this revision yet, so the app has no clue content so far.
 
-The code in this repository is the only thing published here.
+No fetched Plonk It content is published in this repository.
 
 ## Scripts
 
