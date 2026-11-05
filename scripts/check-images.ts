@@ -37,7 +37,7 @@ function fail(message: string): never {
 const maxUsd = Number(values['max-usd']);
 if (!Number.isFinite(maxUsd) || maxUsd < 0) fail(`--max-usd must be a non-negative number, got "${values['max-usd']}".`);
 const limit = values.limit === undefined ? Infinity : Number(values.limit);
-if (limit !== Infinity && (!Number.isInteger(limit) || limit < 0)) fail(`--limit must be a whole number of 0 or more, got "${values.limit}".`);
+if (values.limit !== undefined && (!Number.isInteger(limit) || limit < 0)) fail(`--limit must be a whole number of 0 or more, got "${values.limit}".`);
 
 const dir = values.dir;
 
