@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { openDb } from './db.ts';
 import { cardsFrom, syncDeck } from './deck.ts';
 import { guide, tip } from './testing/guides.ts';
+import type { Box } from '../shared/deck.ts';
+import type { Verdict } from '../scripts/plonkit/vision.ts';
 
 const guides = [
   guide('testland', 'TL', 'Europe', [
@@ -22,10 +24,23 @@ describe('cardsFrom', () => {
     ]);
   });
 
-  it('leaves out tips whose image gives the answer away', () => {
-    const ids = cardsFrom(guides, new Set(['/images/test/b.png'])).map((c) => c.id);
+  const verdict = (giveaway: boolean, covers: Box[] = []): Verdict => ({ giveaway, reason: '', covers, model: 'm', prompt: 2 });
+  const corner = { top: 0.6, left: 0.7, bottom: 1, right: 1 };
+
+  it('leaves out tips whose whole image gives the answer away', () => {
+    const ids = cardsFrom(guides, new Map([['/images/test/b.png', verdict(true)]])).map((c) => c.id);
     expect(ids).not.toContain('tip:testland:b');
     expect(ids).toHaveLength(3);
+  });
+
+  it('keeps tips whose giveaway can be covered, with the covers on the card', () => {
+    const verdicts = new Map([
+      ['/images/test/b.png', verdict(true, [corner])],
+      ['/images/test/a.png', verdict(false)],
+    ]);
+    const cards = cardsFrom(guides, verdicts);
+    expect(cards.find((c) => c.id === 'tip:testland:b')?.data.covers).toEqual([corner]);
+    expect(cards.find((c) => c.id === 'tip:testland:a')?.data.covers).toBeUndefined();
   });
 
   it('reclassifies tips from their text instead of trusting the stored type', () => {

@@ -1,4 +1,4 @@
-import type { Country } from './deck.ts';
+import type { Box, Country } from './deck.ts';
 import type { ClueType, SectionTier } from './plonkit.ts';
 
 export type AnswerMode = 'choice' | 'map';
@@ -19,6 +19,8 @@ export interface ReviewCard {
   mode: AnswerMode;
   isNew: boolean;
   imageUrl: string;
+  /** Parts of the image to hide until the answer is revealed. */
+  covers: Box[];
   /** Only for multiple choice. */
   options?: Country[];
 }

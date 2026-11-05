@@ -2,7 +2,7 @@ import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { loadCountries, loadGiveaways, loadGuides } from './content.ts';
+import { loadCountries, loadGuides, loadVerdicts } from './content.ts';
 import { guide } from './testing/guides.ts';
 
 describe('loadGuides', () => {
@@ -38,15 +38,15 @@ describe('loadCountries', () => {
   });
 });
 
-describe('loadGiveaways', () => {
+describe('loadVerdicts', () => {
   it('returns nothing before images are checked', () => {
-    expect(loadGiveaways(join(tmpdir(), 'ggg-none')).size).toBe(0);
+    expect(loadVerdicts(join(tmpdir(), 'ggg-none')).size).toBe(0);
   });
 
-  it('returns only the images judged to be giveaways', () => {
+  it('returns every verdict by image path', () => {
     const dir = mkdtempSync(join(tmpdir(), 'ggg-'));
-    const verdict = (giveaway: boolean) => ({ giveaway, reason: '', model: 'm' });
-    writeFileSync(join(dir, 'vision.json'), JSON.stringify({ '/images/a.png': verdict(true), '/images/b.png': verdict(false) }));
-    expect([...loadGiveaways(dir)]).toEqual(['/images/a.png']);
+    const verdict = { giveaway: true, reason: '', covers: [], model: 'm', prompt: 2 };
+    writeFileSync(join(dir, 'vision.json'), JSON.stringify({ '/images/a.png': verdict }));
+    expect(loadVerdicts(dir).get('/images/a.png')).toEqual(verdict);
   });
 });
