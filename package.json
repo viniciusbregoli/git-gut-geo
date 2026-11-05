@@ -13,7 +13,8 @@
     "start": "node server/index.ts",
     "typecheck": "tsc -p tsconfig.web.json && tsc -p tsconfig.node.json",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "fetch:plonkit": "node scripts/fetch-plonkit.ts"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.6",
