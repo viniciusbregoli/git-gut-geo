@@ -2,4 +2,37 @@
 
 # git-gut-geo
 
-Created in [T3 Code](https://t3.codes).
+A local, keyboard-first trainer for getting good at GeoGuessr's No Move and NMPZ modes. It turns the community's country guides into a daily spaced-repetition habit: you see a clue (a bollard, a plate, a pole, a road line, a script), name the country, and the scheduler decides when you see it again.
+
+It is a training tool only. It never runs alongside a live game.
+
+## Requirements
+
+- Node.js 24 or newer (it uses the built-in `node:sqlite` module and runs TypeScript directly)
+- pnpm 11
+
+## Getting started
+
+```sh
+pnpm install
+pnpm dev        # API on 127.0.0.1:4317, app on http://localhost:5317
+```
+
+`pnpm build && pnpm start` serves the built app and the API together on port 4317.
+
+## Content and licensing
+
+Clue content comes from [Plonk It](https://www.plonkit.net), licensed [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). A local script fetches it into `data/`, which is gitignored: fetched text and images are for personal use and are never committed to this repository. Every card credits its source guide.
+
+The code in this repository is the only thing published here.
+
+## Scripts
+
+| Script | What it does |
+| --- | --- |
+| `pnpm dev` | Runs the API and the Vite dev server |
+| `pnpm build` | Builds the frontend into `dist/` |
+| `pnpm start` | Serves `dist/` and the API |
+| `pnpm lint` | ESLint |
+| `pnpm typecheck` | TypeScript, for the web and Node projects |
+| `pnpm test` | Vitest |
