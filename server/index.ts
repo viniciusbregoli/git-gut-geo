@@ -1,10 +1,22 @@
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { createApp } from './app.ts';
+import { loadCountries, loadGuides } from './content.ts';
+import { openDb } from './db.ts';
+import { syncDeck } from './deck.ts';
 
 const port = Number(process.env.GGG_API_PORT ?? 4317);
-const app = createApp();
+const contentDir = process.env.GGG_CONTENT_DIR ?? 'data/plonkit';
+
+mkdirSync('data', { recursive: true });
+const db = openDb(process.env.GGG_DB ?? 'data/git-gut-geo.sqlite');
+const guides = loadGuides(contentDir);
+const deck = syncDeck(db, guides);
+console.log(`Deck: ${deck.cards} cards from ${guides.length} guides (${deck.retired} retired)`);
+if (guides.length === 0) console.log('No guides yet: run `pnpm fetch:plonkit` first.');
+
+const app = createApp({ db, countries: loadCountries(contentDir, guides), contentDir });
 
 // `pnpm build` output; in dev, Vite serves the frontend and proxies /api here.
 if (existsSync('dist')) {

@@ -26,6 +26,12 @@ describe('pickOptions', () => {
     expect(options.map((o) => o.continent)).toContain('Europe');
   });
 
+  it('never offers a territory of the correct country, or the country of a territory', () => {
+    const withTerritory = [...world, c('CZ-XY', 'Europe')];
+    expect(pickOptions(world[0]!, withTerritory, new Set(['CZ-XY']), 'seed').map((o) => o.code)).not.toContain('CZ-XY');
+    expect(pickOptions(c('CZ-XY', 'Europe'), withTerritory, new Set(), 'seed').map((o) => o.code)).not.toContain('CZ');
+  });
+
   it('is stable for the same seed', () => {
     const a = pickOptions(world[0]!, world, new Set(), 'card:1').map((o) => o.code);
     const b = pickOptions(world[0]!, world, new Set(), 'card:1').map((o) => o.code);
