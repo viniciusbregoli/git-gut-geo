@@ -10,10 +10,11 @@ describe('loadGuides', () => {
     expect(loadGuides(join(tmpdir(), 'ggg-does-not-exist'))).toEqual([]);
   });
 
-  it('reads every guide file', () => {
+  it('reads every country guide file', () => {
     const dir = mkdtempSync(join(tmpdir(), 'ggg-'));
     mkdirSync(join(dir, 'guides'));
     writeFileSync(join(dir, 'guides', 'testland.json'), JSON.stringify(guide('testland', 'TL', 'Europe', [])));
+    writeFileSync(join(dir, 'guides', 'beginners.json'), JSON.stringify(guide('beginners', 'XX-BEGINNERS', 'General Guide', [])));
     writeFileSync(join(dir, 'guides', 'notes.txt'), 'ignored');
     expect(loadGuides(dir).map((g) => g.slug)).toEqual(['testland']);
   });
@@ -25,6 +26,7 @@ describe('loadCountries', () => {
     const index = [
       { slug: 'b', title: 'Bland', code: 'BL', continent: 'Asia', updatedAt: '' },
       { slug: 'a', title: 'Aland', code: 'AL', continent: 'Europe', updatedAt: '' },
+      { slug: 'maps', title: 'Map directory', code: 'XX-MAPS', continent: 'General Guide', updatedAt: '' },
     ];
     writeFileSync(join(dir, 'index.json'), JSON.stringify(index));
     expect(loadCountries(dir, []).map((c) => c.code)).toEqual(['AL', 'BL']);
