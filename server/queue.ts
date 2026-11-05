@@ -1,3 +1,4 @@
+import type { AnswerMode, AnswerRequest, QueueCounts } from '../shared/api.ts';
 import type { DeckCard, TipCardData } from '../shared/deck.ts';
 import type { ClueType, SectionTier } from '../shared/plonkit.ts';
 import type { Db } from './db.ts';
@@ -12,18 +13,10 @@ export const LEARN_AHEAD_MS = 20 * 60_000;
 export const MAP_MODE_STABILITY_DAYS = 4;
 const REVIEW_STATE = 2;
 
-export type AnswerMode = 'choice' | 'map';
-
 export interface QueuedCard extends DeckCard {
   isNew: boolean;
   mode: AnswerMode;
   reps: number;
-}
-
-export interface QueueCounts {
-  due: number;
-  newLeft: number;
-  reviewedToday: number;
 }
 
 interface CardRow {
@@ -121,19 +114,13 @@ export function nextCard(db: Db, now: Date): QueuedCard | null {
   return soon ? toQueued(soon) : null;
 }
 
-export interface AnswerInput {
-  answer: string;
-  durationMs: number;
-  mode: AnswerMode;
-}
-
 export interface AnswerResult {
   correct: boolean;
   correctCountry: string;
   dueAt: string;
 }
 
-export function answerCard(db: Db, cardId: string, input: AnswerInput, now: Date): AnswerResult | null {
+export function answerCard(db: Db, cardId: string, input: AnswerRequest, now: Date): AnswerResult | null {
   const row = db.prepare(`${SELECT_CARD} WHERE c.id = ?`).get(cardId) as CardRow | undefined;
   if (!row) return null;
 
