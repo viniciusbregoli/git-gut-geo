@@ -1,0 +1,149 @@
+.app {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top bar */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  height: 64px;
+  padding: 0 32px;
+  background: var(--ground);
+  border-bottom: 1px solid var(--raised);
+}
+
+.topbar__logo {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--pale);
+}
+
+.topbar__nav {
+  display: flex;
+  gap: 6px;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  padding: 0 12px 0 16px;
+  border-radius: var(--radius-s);
+  color: var(--muted);
+  font-weight: 500;
+  text-decoration: none;
+  transition: background var(--fast) var(--ease-out), color var(--fast) var(--ease-out);
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab--active {
+  background: var(--raised);
+  color: var(--pale);
+}
+
+.tab--active .key {
+  background: var(--ground);
+  color: var(--amber);
+}
+
+.topbar__count {
+  margin-left: auto;
+  color: var(--muted);
+}
+
+.topbar__count b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.topbar__progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--amber);
+  transform-origin: left;
+  transition: transform 250ms var(--ease-out);
+}
+
+/* Key chips */
+
+.key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: var(--radius-s);
+  background: var(--raised);
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* Buttons */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 10px 0 16px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-m);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--fast) var(--ease-out), border-color var(--fast) var(--ease-out);
+}
+
+.button--primary {
+  background: var(--amber);
+  color: var(--amber-ink);
+}
+
+.button--primary:hover {
+  background: var(--pale);
+}
+
+.button--primary .key {
+  background: rgb(0 0 0 / 0.14);
+  color: inherit;
+}
+
+.button--quiet {
+  border-color: var(--raised);
+  background: transparent;
+  color: var(--muted);
+}
+
+.button--quiet:hover {
+  background: var(--raised);
+  color: var(--text);
+}
+
+@media (max-width: 720px) {
+  .topbar {
+    gap: 20px;
+    padding: 0 16px;
+  }
+
+  .topbar__count {
+    display: none;
+  }
+}

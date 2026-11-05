@@ -1,3 +1,9 @@
+import { TopBar } from './components/TopBar.tsx';
+
 export function App() {
-  return <h1>git-gut-geo</h1>;
+  return (
+    <div className="app">
+      <TopBar counts={null} />
+    </div>
+  );
 }
