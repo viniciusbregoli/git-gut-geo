@@ -81,8 +81,9 @@
 .plate__cover {
   position: absolute;
   border-radius: var(--radius-s);
-  background: color-mix(in srgb, var(--panel) 70%, transparent);
-  backdrop-filter: blur(22px) saturate(0.6);
+  /* Opaque: a bright flag or map must not show through before the reveal. */
+  background: var(--raised);
+  box-shadow: inset 0 0 0 1px var(--line);
   transition: opacity 240ms var(--ease-out);
 }
 
