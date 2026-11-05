@@ -59,7 +59,9 @@
 }
 
 .plate {
+  position: relative;
   width: 100%;
+  /* covers.ts places covers from this ratio (PLATE_RATIO); change both together. */
   aspect-ratio: 16 / 10;
   margin: 2px 0 0;
   overflow: hidden;
@@ -73,6 +75,20 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+/* Hides a locator map or caption that names the answer, lifted on the reveal. */
+.plate__cover {
+  position: absolute;
+  border-radius: var(--radius-s);
+  /* Opaque: a bright flag or map must not show through before the reveal. */
+  background: var(--raised);
+  box-shadow: inset 0 0 0 1px var(--line);
+  transition: opacity 240ms var(--ease-out);
+}
+
+.plate__cover--lifted {
+  opacity: 0;
 }
 
 .review__credit {

@@ -2,7 +2,7 @@ import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { loadCountries, loadGuides } from './content.ts';
+import { loadCountries, loadGuides, loadVerdicts } from './content.ts';
 import { guide } from './testing/guides.ts';
 
 describe('loadGuides', () => {
@@ -35,5 +35,18 @@ describe('loadCountries', () => {
   it('falls back to the fetched guides without an index', () => {
     const guides = [guide('testland', 'TL', 'Europe', [])];
     expect(loadCountries(join(tmpdir(), 'ggg-none'), guides)).toEqual([{ code: 'TL', name: 'Testland', continent: 'Europe' }]);
+  });
+});
+
+describe('loadVerdicts', () => {
+  it('returns nothing before images are checked', () => {
+    expect(loadVerdicts(join(tmpdir(), 'ggg-none')).size).toBe(0);
+  });
+
+  it('returns every verdict by image path', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'ggg-'));
+    const verdict = { giveaway: true, reason: '', covers: [], model: 'm', prompt: 2 };
+    writeFileSync(join(dir, 'vision.json'), JSON.stringify({ '/images/a.png': verdict }));
+    expect(loadVerdicts(dir).get('/images/a.png')).toEqual(verdict);
   });
 });

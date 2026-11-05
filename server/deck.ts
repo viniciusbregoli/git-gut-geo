@@ -2,6 +2,7 @@ import { clueRank, frequencyRank } from '../shared/curriculum.ts';
 import type { Country, DeckCard } from '../shared/deck.ts';
 import type { Guide } from '../shared/plonkit.ts';
 import { classifyTip } from '../scripts/plonkit/classify.ts';
+import { coversFor, isQuizzable, type Verdict } from '../scripts/plonkit/vision.ts';
 import type { Db } from './db.ts';
 
 export const tipCardId = (slug: string, tipId: string) => `tip:${slug}:${tipId}`;
@@ -15,10 +16,18 @@ export function countriesFrom(guides: Guide[]): Country[] {
 /**
  * Cards in curriculum order: country-level tips before region-level ones,
  * then by clue type, then by how common the country is, then guide order.
+ * Tips whose image gives the answer away (see `pnpm check:images`) are left
+ * out, unless the giveaway is a part of the image the card can cover.
  */
-export function cardsFrom(guides: Guide[]): (DeckCard & { position: number })[] {
+export function cardsFrom(
+  guides: Guide[],
+  verdicts: ReadonlyMap<string, Verdict> = new Map(),
+): (DeckCard & { position: number })[] {
   const cards = guides.flatMap((guide) =>
-    guide.tips.map((tip, index) => {
+    guide.tips.flatMap((tip, index) => {
+      const verdict = verdicts.get(tip.imageUrl);
+      if (!isQuizzable(verdict)) return [];
+      const covers = coversFor(verdict);
       // Reclassify on load, so classifier improvements apply without re-fetching.
       const clueType = classifyTip(tip.tags, tip.text);
       const card: DeckCard = {
@@ -33,11 +42,12 @@ export function cardsFrom(guides: Guide[]): (DeckCard & { position: number })[] 
           section: tip.section,
           text: tip.text,
           imageUrl: tip.imageUrl,
+          ...(covers.length > 0 ? { covers } : {}),
           sourceUrl: guide.sourceUrl,
         },
       };
       const key = [tip.tier === 'country' ? 0 : 1, clueRank(clueType), frequencyRank(guide.code), guide.title, index];
-      return { card, key };
+      return [{ card, key }];
     }),
   );
 
@@ -54,8 +64,12 @@ export function cardsFrom(guides: Guide[]): (DeckCard & { position: number })[] 
 }
 
 /** Upserts the deck and retires cards whose tips no longer exist. Progress is never deleted. */
-export function syncDeck(db: Db, guides: Guide[]): { cards: number; retired: number } {
-  const cards = cardsFrom(guides);
+export function syncDeck(
+  db: Db,
+  guides: Guide[],
+  verdicts?: ReadonlyMap<string, Verdict>,
+): { cards: number; retired: number } {
+  const cards = cardsFrom(guides, verdicts);
   const upsert = db.prepare(`
     INSERT INTO cards (id, kind, country_code, clue_type, tier, position, data, retired)
     VALUES (?, ?, ?, ?, ?, ?, ?, 0)

@@ -50,6 +50,7 @@ export function createApp(deps: AppDeps) {
         mode: queued.mode,
         isNew: queued.isNew,
         imageUrl: `/api${queued.data.imageUrl}`,
+        covers: queued.data.covers ?? [],
       };
       const correct = byCode.get(queued.countryCode);
       if (queued.mode === 'choice' && correct) {

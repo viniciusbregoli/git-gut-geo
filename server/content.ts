@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Country } from '../shared/deck.ts';
 import type { Guide, GuideIndexEntry } from '../shared/plonkit.ts';
+import type { Verdict, VerdictCache } from '../scripts/plonkit/vision.ts';
 
 // Plonk It also publishes general guides (beginner's guide, map directory,
 // spillover countries) with codes like XX-BEGINNERS. They are not answers.
@@ -39,4 +40,16 @@ export function loadCountries(dir: string, guides: Guide[]): Country[] {
     .filter(isCountryGuide)
     .map((g) => ({ code: g.code, name: g.title, continent: g.continent }))
     .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** Verdicts from `pnpm check:images` by image path; empty before it has run. */
+export function loadVerdicts(dir: string): Map<string, Verdict> {
+  let cache: VerdictCache;
+  try {
+    cache = JSON.parse(readFileSync(join(dir, 'vision.json'), 'utf8')) as VerdictCache;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return new Map();
+    throw error;
+  }
+  return new Map(Object.entries(cache));
 }
