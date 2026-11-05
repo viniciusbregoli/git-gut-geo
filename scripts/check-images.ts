@@ -112,7 +112,7 @@ async function collect(name: string, label: string) {
 if (outstanding.length > 0) {
   console.log(`${outstanding.length} batches from an earlier run were not collected.`);
   if (values['dry-run']) process.exit(0);
-  for (const name of [...outstanding]) await collect(name, `Earlier batch ${name}`);
+  await Promise.all([...outstanding].map((name) => collect(name, `Earlier batch ${name}`)));
 }
 
 const guides = readdirSync(join(dir, 'guides'))
@@ -157,6 +157,9 @@ function requestsFor(chunk: [string, string][]) {
   });
 }
 
+// Every batch is submitted first and collected as it finishes: a batch can sit in the
+// queue for many minutes, so waiting on each in turn would take hours.
+const submitted: [string, string][] = [];
 for (const [i, planned] of plan.entries()) {
   const chunk = requestsFor(planned);
   if (chunk.length === 0) continue;
@@ -168,9 +171,10 @@ for (const [i, planned] of plan.entries()) {
   });
   outstanding.push(created.name);
   saveOutstanding();
+  submitted.push([created.name, `Batch ${i + 1}/${plan.length}`]);
   console.log(`Batch ${i + 1}/${plan.length}: ${chunk.length} images submitted (${created.name})`);
-  await collect(created.name, `Batch ${i + 1}`);
 }
+await Promise.all(submitted.map(([name, label]) => collect(name, label)));
 
 const verdicts = Object.values(cache);
 const covered = verdicts.filter((v) => v.giveaway && (v.covers ?? []).length > 0).length;
