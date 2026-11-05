@@ -27,7 +27,7 @@ It is a giveaway only if the answer is written or drawn onto the image by whoeve
 - any map of the country, inset or full size, labelled or not: its outline alone identifies it;
 - a side-by-side comparison whose halves are labelled with places.
 
-It is NOT a giveaway when the identifying detail is part of the photographed scene, even if it names the country: licence plates and their country codes, road signs, place names on signs, shop fronts, writing on cars or buildings. Reading those is the skill being trained. Arrows, circles or highlights that point at a detail without naming a place are also fine.`;
+It is NOT a giveaway when the identifying detail is part of the photographed scene, even if it names the country: licence plates and their country codes, road signs, place names on signs, shop fronts, writing on cars or buildings. Reading those is the skill being trained. Arrows, circles or highlights that point at a detail without naming a place are also fine, and so are labels that name no place, such as camera generations ("Gen 3"), views ("Front", "Back"), or plate types ("Standard", "Military").`;
 }
 
 const schema = {
