@@ -35,7 +35,7 @@ The script reads Plonk It's guide index, then each country page's embedded data,
 Some guide images answer their own question: a caption naming the country, a coverage map, a comparison labelled "US & Canada" and "Europe". Most region tips also carry a small locator map in a corner. `pnpm check:images` sends each downloaded image once to Gemini (`gemini-3.5-flash-lite`, through the Batch API) and caches the verdicts in `data/plonkit/vision.json`. On its next start the server reads them:
 
 - When the giveaway is a small added part (a locator map, a caption, a pasted plate), the card covers it while you answer and uncovers it on the reveal.
-- When the whole image gives the answer away (a full map, a labelled comparison), the tip stays out of the deck. It is still in the guide for reading.
+- When the whole image gives the answer away (a full map, a labelled comparison), or the covers would hide more than half of it, the tip stays out of the deck. It is still in the guide for reading.
 
 ```sh
 pnpm check:images --dry-run      # how many images are left and the most it would cost
@@ -43,7 +43,7 @@ GEMINI_API_KEY=... pnpm check:images             # stops at US$1 by default
 GEMINI_API_KEY=... pnpm check:images --max-usd 3 # raise the cap
 ```
 
-One image costs about US$0.00013 in a batch, so the full set of roughly 6,000 images is under a dollar. The cap counts each image at a higher estimate, so a run stops before spending it. Images already judged are never sent again, unless the prompt changes (`PROMPT_VERSION` in `scripts/plonkit/vision.ts`). A batch can take a few minutes to start.
+One image costs about US$0.0002 in a batch, so the full set of roughly 5,200 images is about a dollar. The cap counts each image at a higher estimate, so a run stops before spending it. Images already judged are never sent again, unless the prompt changes (`PROMPT_VERSION` in `scripts/plonkit/vision.ts`). A batch can take a few minutes to start.
 
 No fetched Plonk It content is published in this repository.
 
