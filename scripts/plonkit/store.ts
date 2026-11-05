@@ -21,6 +21,11 @@ async function writeFileAtomic(path: string, data: string | Uint8Array) {
   await rename(temporary, path);
 }
 
+/** Slugs come from fetched pages, so they are checked before becoming file names. */
+export function isSafeSlug(slug: string): boolean {
+  return /^[a-z0-9][a-z0-9-]*$/i.test(slug);
+}
+
 /**
  * Layout under `root` (data/plonkit by default):
  *   index.json, guides/<slug>.json, and images mirrored at their site paths.
@@ -31,12 +36,16 @@ export function fileStore(root: string): GuideStore {
     return join(root, imageUrl);
   };
 
+  const guidePath = (slug: string) => {
+    if (!isSafeSlug(slug)) throw new Error(`Unsafe guide slug: ${slug}`);
+    return join(root, 'guides', `${slug}.json`);
+  };
+
   return {
     readIndex: () => readJson<GuideIndexEntry[]>(join(root, 'index.json')),
     writeIndex: (index) => writeFileAtomic(join(root, 'index.json'), `${JSON.stringify(index, null, 2)}\n`),
-    readGuide: (slug) => readJson<Guide>(join(root, 'guides', `${slug}.json`)),
-    writeGuide: (guide) =>
-      writeFileAtomic(join(root, 'guides', `${guide.slug}.json`), `${JSON.stringify(guide, null, 2)}\n`),
+    readGuide: async (slug) => readJson<Guide>(guidePath(slug)),
+    writeGuide: async (guide) => writeFileAtomic(guidePath(guide.slug), `${JSON.stringify(guide, null, 2)}\n`),
     hasImage: (imageUrl) =>
       access(imagePath(imageUrl)).then(
         () => true,
