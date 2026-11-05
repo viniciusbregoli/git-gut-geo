@@ -130,6 +130,16 @@ describe('syncGuides', () => {
     expect(store.guides.has('broken')).toBe(false);
   });
 
+  it('rejects a page that belongs to another guide', async () => {
+    const store = memoryStore();
+    const { d } = deps([entry('elsewhere')], store, { 'https://www.plonkit.net/elsewhere': page });
+
+    const result = await syncGuides(d, options);
+
+    expect(result.failed).toEqual([{ slug: 'elsewhere', error: 'page is for testland' }]);
+    expect(store.guides.size).toBe(0);
+  });
+
   it('limits the run to the requested slugs', async () => {
     const { d, requests } = deps([entry('a'), entry('testland')], memoryStore(), {
       'https://www.plonkit.net/testland': page,

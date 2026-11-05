@@ -74,6 +74,8 @@ export async function syncGuides(deps: SyncDeps, options: SyncOptions): Promise<
       requestedPage = true;
       try {
         guide = parseGuidePage(await deps.fetchText(`${PLONKIT_ORIGIN}/${entry.slug}`));
+        // The page names its own guide; storing it under another slug would overwrite that guide.
+        if (guide.slug !== entry.slug) throw new Error(`page is for ${guide.slug}`);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         result.failed.push({ slug: entry.slug, error: message });
