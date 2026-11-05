@@ -40,7 +40,8 @@ const isString = (value: unknown): value is string => typeof value === 'string';
 const stringList = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter(isString) : [];
 
-function indexEntry(raw: RawIndexEntry): GuideIndexEntry | null {
+function indexEntry(raw: RawIndexEntry | null | undefined): GuideIndexEntry | null {
+  if (!raw || typeof raw !== 'object') return null;
   const { title, slug, code, updatedAt } = raw;
   if (!isString(title) || !isString(slug) || !isString(code) || !isString(updatedAt)) return null;
   return { title, slug, code, updatedAt, continent: stringList(raw.cat)[0] ?? 'Unknown' };
@@ -50,7 +51,7 @@ function indexEntry(raw: RawIndexEntry): GuideIndexEntry | null {
 export function parseGuideIndex(json: unknown): GuideIndexEntry[] {
   const data = (json as { data?: unknown })?.data;
   if (!Array.isArray(data)) throw new Error('Guide index has no data array');
-  return data.flatMap((raw: RawIndexEntry) => indexEntry(raw) ?? []);
+  return data.flatMap((raw: RawIndexEntry | null) => indexEntry(raw) ?? []);
 }
 
 function sectionTier(title: string): SectionTier {

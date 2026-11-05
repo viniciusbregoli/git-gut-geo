@@ -45,6 +45,8 @@ describe('parseGuideIndex', () => {
       data: [
         { title: 'Testland', slug: 'testland', code: 'TL', cat: ['Europe'], updatedAt: '2026-01-02T00:00:00.000Z' },
         { title: 'Broken', slug: 42 },
+        null,
+        'not an object',
       ],
     });
     expect(index).toEqual([
