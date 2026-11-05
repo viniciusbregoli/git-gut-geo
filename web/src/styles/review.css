@@ -1,0 +1,320 @@
+/* Review */
+
+.review {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 28px 16px 48px;
+}
+
+.review__stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: min(560px, 100%);
+}
+
+/* Wide screens: the explanation sits beside the clue, so nothing scrolls away. */
+@media (min-width: 1100px) {
+  .review--revealed {
+    display: grid;
+    grid-template-columns: 560px minmax(0, 460px);
+    grid-template-areas:
+      'prompt prompt'
+      'stage reveal';
+    justify-content: center;
+    align-content: start;
+    align-items: start;
+    gap: 20px 32px;
+    max-width: 1120px;
+  }
+
+  .review--revealed .review__prompt {
+    grid-area: prompt;
+  }
+
+  .review--revealed .review__stage {
+    grid-area: stage;
+  }
+
+  .review--revealed .reveal {
+    grid-area: reveal;
+    width: auto;
+    margin-top: 0;
+  }
+}
+
+.review__prompt {
+  font-size: 40px;
+  line-height: 48px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-align: center;
+}
+
+.plate {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  margin: 2px 0 0;
+  overflow: hidden;
+  border: 1px solid var(--raised);
+  border-radius: var(--radius-l);
+  background: var(--panel);
+}
+
+.plate img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.review__credit {
+  margin-top: -4px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.review__hint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.review--message {
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.review--message h1 {
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--pale);
+}
+
+.review--message p {
+  max-width: 52ch;
+  color: var(--muted);
+}
+
+/* Answer choices */
+
+.choices {
+  display: grid;
+  /* Two columns: country names run long ("Bosnia and Herzegovina"). */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 8px 14px;
+  border: 1px solid var(--raised);
+  border-radius: var(--radius-m);
+  background: var(--panel);
+  font-size: 17px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--fast) var(--ease-out), border-color var(--fast) var(--ease-out),
+    opacity var(--fast) var(--ease-out);
+}
+
+.choice .key {
+  min-width: 26px;
+  height: 26px;
+  color: var(--amber);
+}
+
+.choice:hover:not(:disabled) {
+  background: var(--raised);
+  border-color: var(--coast);
+}
+
+.choice:disabled {
+  cursor: default;
+}
+
+.choice--correct {
+  border-color: var(--amber);
+  background: var(--lit-soft);
+  color: var(--pale);
+}
+
+.choice--wrong {
+  border-color: var(--alert);
+  background: var(--alert-soft);
+}
+
+.choice--wrong .key {
+  color: var(--alert);
+}
+
+.choice--dim {
+  opacity: 0.45;
+}
+
+/* Country search (map-mode keyboard path) */
+
+.search {
+  position: relative;
+  width: 100%;
+}
+
+.search__input {
+  width: 100%;
+  height: 52px;
+  padding: 0 16px;
+  border: 1px solid var(--raised);
+  border-radius: var(--radius-m);
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: 17px;
+}
+
+.search__input::placeholder {
+  color: var(--faint);
+}
+
+.search__input:focus-visible {
+  outline: none;
+  border-color: var(--pale);
+}
+
+.search__list {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid var(--raised);
+  border-radius: var(--radius-m);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.search__option {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: var(--radius-s);
+  cursor: pointer;
+}
+
+.search__option--active {
+  background: var(--raised);
+  color: var(--pale);
+}
+
+.search__continent {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Reveal */
+
+.reveal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(720px, 100%);
+  margin-top: 8px;
+  padding: 24px;
+  border: 1px solid var(--raised);
+  border-radius: var(--radius-l);
+  background: var(--panel);
+}
+
+.reveal__verdict {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 12px;
+}
+
+.reveal__verdict svg {
+  color: var(--amber);
+}
+
+.reveal--wrong .reveal__verdict svg {
+  color: var(--alert);
+}
+
+.reveal__verdict h2 {
+  font-size: 32px;
+  line-height: 40px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: var(--pale);
+}
+
+.reveal__note {
+  grid-column: 2;
+  color: var(--muted);
+}
+
+.reveal__tip {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 68ch;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+.reveal__tip strong {
+  color: var(--pale);
+  font-weight: 650;
+}
+
+.reveal__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--raised);
+}
+
+.reveal__source {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.reveal__actions {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 720px) {
+  .review__prompt {
+    font-size: 28px;
+    line-height: 34px;
+  }
+
+  .reveal {
+    padding: 18px;
+  }
+}
