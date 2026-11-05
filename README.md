@@ -22,7 +22,15 @@ pnpm dev        # API on 127.0.0.1:4317, app on http://localhost:5317
 
 ## Content and licensing
 
-Clue content comes from [Plonk It](https://www.plonkit.net), licensed [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). It is fetched into `data/`, which is gitignored: fetched text and images are for personal use and are never committed to this repository. Every card credits its source guide. The fetch script is not part of this revision yet, so the app has no clue content so far.
+Clue content comes from [Plonk It](https://www.plonkit.net), licensed [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). It is fetched into `data/plonkit/`, which is gitignored: fetched text and images are for personal use and are never committed to this repository. Every card credits its source guide.
+
+```sh
+pnpm fetch:plonkit                   # every guide that changed since the last run
+pnpm fetch:plonkit --only portugal   # one guide (repeat --only for more)
+pnpm fetch:plonkit --force           # re-fetch even if a guide is unchanged
+```
+
+The script reads Plonk It's guide index, then each country page's embedded data, one page every 2 seconds and one image every 250 ms (`--page-delay` and `--image-delay` change these). Images come from the same resize endpoint the site's own pages use, and each one takes a few seconds the first time it is rendered, so a first full run takes a long while. Later runs only fetch guides whose update date changed, plus any image that failed before. Set `FIRECRAWL_URL` (for example `http://127.0.0.1:3002`) to retry pages a plain request cannot read through a self-hosted Firecrawl.
 
 No fetched Plonk It content is published in this repository.
 
@@ -33,6 +41,7 @@ No fetched Plonk It content is published in this repository.
 | `pnpm dev` | Runs the API and the Vite dev server |
 | `pnpm build` | Builds the frontend into `dist/` |
 | `pnpm start` | Serves `dist/` and the API |
+| `pnpm fetch:plonkit` | Fetches Plonk It guides and images into `data/plonkit/` |
 | `pnpm lint` | ESLint |
 | `pnpm typecheck` | TypeScript, for the web and Node projects |
 | `pnpm test` | Vitest |
