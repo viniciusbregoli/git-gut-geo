@@ -1,3 +1,4 @@
+import { sovereignOf } from '../shared/curriculum.ts';
 import type { Country } from '../shared/deck.ts';
 
 function hash(text: string): number {
@@ -34,9 +35,8 @@ function shuffled<T>(items: T[], random: () => number): T[] {
  */
 export function pickOptions(correct: Country, all: Country[], sharesClue: Set<string>, seed: string): Country[] {
   const random = rng(seed);
-  // Plonk It has separate guides for territories (PT-MA, Madeira); never offer one as a wrong answer for its country.
-  const base = (code: string) => code.split('-')[0];
-  const others = all.filter((c) => base(c.code) !== base(correct.code));
+  // Territories (Madeira, Puerto Rico, Guam) look like the country they belong to, so neither is a wrong answer for the other.
+  const others = all.filter((c) => sovereignOf(c.code) !== sovereignOf(correct.code));
   const tiers = [
     others.filter((c) => c.continent === correct.continent && sharesClue.has(c.code)),
     others.filter((c) => c.continent === correct.continent && !sharesClue.has(c.code)),

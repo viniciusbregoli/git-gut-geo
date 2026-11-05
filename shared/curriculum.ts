@@ -40,3 +40,25 @@ export function frequencyRank(code: string): number {
 export function clueRank(type: ClueType): number {
   return CLUE_ORDER.indexOf(type);
 }
+
+/**
+ * Territories with their own Plonk It guide, by the country they belong to.
+ * They share its plates, signs and coverage, so one is never a fair wrong
+ * answer for the other. Subdivision codes (US-AK, PT-MA) group by prefix.
+ */
+const SOVEREIGN: Record<string, string> = {
+  AS: 'US', GU: 'US', MP: 'US', PR: 'US', UM: 'US', VI: 'US',
+  BM: 'GB', FK: 'GB', GI: 'GB', GS: 'GB', IM: 'GB', IO: 'GB', JE: 'GB', PN: 'GB',
+  CC: 'AU', CX: 'AU',
+  FO: 'DK', GL: 'DK',
+  MQ: 'FR', PM: 'FR', RE: 'FR',
+  CW: 'NL',
+  SJ: 'NO',
+  HK: 'CN', MO: 'CN',
+};
+
+/** The country a code belongs to: itself, or the sovereign of a territory or subdivision. */
+export function sovereignOf(code: string): string {
+  const base = code.split('-')[0] ?? code;
+  return SOVEREIGN[base] ?? base;
+}

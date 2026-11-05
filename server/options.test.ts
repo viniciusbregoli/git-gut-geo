@@ -32,6 +32,13 @@ describe('pickOptions', () => {
     expect(pickOptions(c('CZ-XY', 'Europe'), withTerritory, new Set(), 'seed').map((o) => o.code)).not.toContain('CZ');
   });
 
+  it('never mixes a country with territories that have their own code', () => {
+    const americas = [c('US', 'North America'), c('PR', 'North America'), c('VI', 'North America'),
+      c('UM-MQ', 'North America'), c('CA', 'North America'), c('MX', 'North America'), c('GT', 'North America')];
+    const codes = pickOptions(americas[0]!, americas, new Set(['PR', 'VI', 'UM-MQ']), 'seed').map((o) => o.code);
+    expect(codes.sort()).toEqual(['CA', 'GT', 'MX', 'US']);
+  });
+
   it('is stable for the same seed', () => {
     const a = pickOptions(world[0]!, world, new Set(), 'card:1').map((o) => o.code);
     const b = pickOptions(world[0]!, world, new Set(), 'card:1').map((o) => o.code);
