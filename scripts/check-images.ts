@@ -76,12 +76,39 @@ interface Operation {
 
 let spent = 0;
 
-/** Waits for a batch, stores its verdicts and forgets it. */
+const MAX_POLL_FAILURES = 10;
+
+const forget = (name: string) => {
+  outstanding = outstanding.filter((n) => n !== name);
+  saveOutstanding();
+};
+
+/**
+ * Waits for a batch, stores its verdicts and forgets it. Never throws, so one
+ * batch's trouble cannot stop the others being collected.
+ */
 async function collect(name: string, label: string) {
   let operation: Operation;
+  let failures = 0;
   for (;;) {
-    operation = await call<Operation>(`${API}/${name}`);
-    if (operation.done) break;
+    try {
+      operation = await call<Operation>(`${API}/${name}`);
+      failures = 0;
+      if (operation.done) break;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.startsWith('HTTP 404')) {
+        // Expired or deleted: the result cannot be fetched any more, so its images are sent again next run.
+        forget(name);
+        console.log(`${label} no longer exists on the server. Its images are retried next run.`);
+        return;
+      }
+      failures += 1;
+      if (failures >= MAX_POLL_FAILURES) {
+        console.log(`${label} not collected after ${failures} failed polls (${message}). It is picked up next run.`);
+        return;
+      }
+    }
     await new Promise((resolve) => setTimeout(resolve, POLL_MS));
   }
 
@@ -102,8 +129,7 @@ async function collect(name: string, label: string) {
     }
     saveCache();
   }
-  outstanding = outstanding.filter((n) => n !== name);
-  saveOutstanding();
+  forget(name);
   if (!operation.error) {
     console.log(`${label}: ${operation.metadata?.state ?? 'done'}, ${flagged} giveaways, about US$${spent.toFixed(4)} spent so far`);
   }
