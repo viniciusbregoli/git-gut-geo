@@ -67,7 +67,13 @@ const result = await syncGuides(
   {
     fetchJson: async (url) => (await get(url)).json(),
     fetchText: fetchPage,
-    fetchBytes: async (url) => new Uint8Array(await (await get(url)).arrayBuffer()),
+    fetchBytes: async (url) => {
+      const res = await get(url);
+      // A 200 with an HTML error page must not be stored as an image.
+      const type = res.headers.get('content-type') ?? '';
+      if (!type.startsWith('image/')) throw new Error(`expected an image, got ${type || 'no content type'}`);
+      return new Uint8Array(await res.arrayBuffer());
+    },
     sleep: (ms) => sleep(ms),
     store: fileStore(values.out),
     log: (message) => console.log(message),
