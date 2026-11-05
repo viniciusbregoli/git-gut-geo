@@ -1,0 +1,47 @@
+/* Earth at Night. Dark is primary (evening use); a day-side variant follows the OS. */
+:root {
+  color-scheme: dark;
+  --ground: #06080e;
+  --panel: #0d1524;
+  --raised: #16243a;
+  --line: #1e2e47;
+  --coast: #2a3b55;
+  --text: #e6ecf7;
+  --muted: #8a9bb5;
+  --faint: #5c6c86;
+  --amber: #f2b65a;
+  --amber-ink: #1a1206;
+  --pale: #ffe4ae;
+  --alert: #e25c4b;
+  --alert-soft: #3a1915;
+  --lit-soft: #2b2212;
+
+  --font: 'Hanken Grotesk Variable', 'Hanken Grotesk', system-ui, sans-serif;
+  --radius-s: 6px;
+  --radius-m: 10px;
+  --radius-l: 12px;
+  --shadow: 0 12px 32px -12px rgb(0 0 0 / 0.6);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --fast: 160ms;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+    --ground: #eef2f8;
+    --panel: #ffffff;
+    --raised: #e1e8f2;
+    --line: #d3dce9;
+    --coast: #9fb0c8;
+    --text: #0b1424;
+    --muted: #4a5a74;
+    --faint: #6b7a92;
+    --amber: #a8650c;
+    --amber-ink: #ffffff;
+    --pale: #6e4209;
+    --alert: #b8382a;
+    --alert-soft: #fbe4e0;
+    --lit-soft: #f7ead3;
+    --shadow: 0 12px 32px -16px rgb(11 20 36 / 0.25);
+  }
+}
