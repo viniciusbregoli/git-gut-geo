@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import type { Guide } from '../shared/plonkit.ts';
@@ -73,15 +73,26 @@ async function call<T>(url: string, init?: RequestInit): Promise<T> {
   return body;
 }
 
-const requests = todo.flatMap(([imageUrl, country]) => {
-  const bytes = readFileSync(join(dir, imageUrl));
-  const mimeType = mimeTypeOf(bytes);
-  if (!mimeType) {
-    console.log(`${imageUrl}: not an image, skipped`);
-    return [];
-  }
-  return [{ request: visionRequest(country, bytes, mimeType), metadata: { key: imageUrl } }];
-});
+// Chunks are planned from file sizes (base64 is 4/3 of the bytes, plus the prompt),
+// and each chunk's images are read only when it is submitted, so memory holds one batch.
+const PROMPT_BYTES = 4096;
+const plan = chunkBySize(
+  todo,
+  ([imageUrl]) => Math.ceil(statSync(join(dir, imageUrl)).size / 3) * 4 + PROMPT_BYTES,
+  INLINE_LIMIT_BYTES,
+);
+
+function requestsFor(chunk: [string, string][]) {
+  return chunk.flatMap(([imageUrl, country]) => {
+    const bytes = readFileSync(join(dir, imageUrl));
+    const mimeType = mimeTypeOf(bytes);
+    if (!mimeType) {
+      console.log(`${imageUrl}: not an image, skipped`);
+      return [];
+    }
+    return [{ request: visionRequest(country, bytes, mimeType), metadata: { key: imageUrl } }];
+  });
+}
 
 interface Operation {
   done?: boolean;
@@ -91,15 +102,16 @@ interface Operation {
 }
 
 let spent = 0;
-const chunks = chunkBySize(requests, (r) => JSON.stringify(r).length, INLINE_LIMIT_BYTES);
-for (const [i, chunk] of chunks.entries()) {
+for (const [i, planned] of plan.entries()) {
+  const chunk = requestsFor(planned);
+  if (chunk.length === 0) continue;
   const created = await call<{ name: string }>(`${API}/models/${VISION_MODEL}:batchGenerateContent`, {
     method: 'POST',
     body: JSON.stringify({
       batch: { display_name: `git-gut-geo-images-${i + 1}`, input_config: { requests: { requests: chunk } } },
     }),
   });
-  console.log(`Batch ${i + 1}/${chunks.length}: ${chunk.length} images submitted (${created.name})`);
+  console.log(`Batch ${i + 1}/${plan.length}: ${chunk.length} images submitted (${created.name})`);
 
   let operation: Operation;
   for (;;) {
