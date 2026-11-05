@@ -7,6 +7,7 @@ import { useHotkeys } from '../lib/hotkeys.ts';
 import { promptFor } from '../lib/prompts.ts';
 import { Choices } from './Choices.tsx';
 import { CountrySearch } from './CountrySearch.tsx';
+import { Plate } from './Plate.tsx';
 import { Reveal } from './Reveal.tsx';
 
 type Phase =
@@ -126,9 +127,7 @@ export function ReviewScreen({ onCounts }: { onCounts: (counts: QueueCounts) => 
     <main className={`review${revealed ? ' review--revealed' : ''}`}>
       <h1 className="review__prompt">{promptFor(card.clueType)}</h1>
       <div className="review__stage">
-        <figure className="plate">
-          <img key={card.id} src={card.imageUrl} alt="The clue for this card" />
-        </figure>
+        <Plate key={card.id} src={card.imageUrl} covers={card.covers} revealed={Boolean(revealed)} />
         {!revealed && <p className="review__credit">Clue from Plonk It · CC BY-NC-SA 4.0</p>}
 
         {card.mode === 'choice' && card.options ? (
