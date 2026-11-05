@@ -28,10 +28,24 @@ export interface Verdict {
   prompt: number;
 }
 
+/**
+ * The most of an image covers may hide. The model sometimes boxes a map laid
+ * over the whole scene (Madagascar's trekker shot was 93% covered), which leaves
+ * nothing to answer from, so such an image stays out like a full giveaway.
+ */
+export const MAX_COVERED_AREA = 0.5;
+
+/** The share of the image the covers hide, counting overlaps twice (an upper bound). */
+export function coveredArea(covers: readonly Box[]): number {
+  return covers.reduce((sum, c) => sum + (c.bottom - c.top) * (c.right - c.left), 0);
+}
+
 /** Whether a tip with this verdict can be a card: no giveaway, or one that can be covered. */
 export function isQuizzable(verdict: Verdict | undefined): boolean {
+  if (!verdict || !verdict.giveaway) return true;
   // Verdicts from before covers existed have none, so their giveaways stay out.
-  return !verdict || !verdict.giveaway || (verdict.covers ?? []).length > 0;
+  const covers = verdict.covers ?? [];
+  return covers.length > 0 && coveredArea(covers) <= MAX_COVERED_AREA;
 }
 
 export function visionPrompt(country: string): string {

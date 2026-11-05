@@ -8,6 +8,7 @@ import {
   chunkBySize,
   costOf,
   ESTIMATED_USD_PER_IMAGE,
+  isQuizzable,
   mimeTypeOf,
   parseVerdict,
   PROMPT_VERSION,
@@ -203,8 +204,8 @@ for (const [i, planned] of plan.entries()) {
 await Promise.all(submitted.map(([name, label]) => collect(name, label)));
 
 const verdicts = Object.values(cache);
-const covered = verdicts.filter((v) => v.giveaway && (v.covers ?? []).length > 0).length;
-const dropped = verdicts.filter((v) => v.giveaway && (v.covers ?? []).length === 0).length;
+const dropped = verdicts.filter((v) => !isQuizzable(v)).length;
+const covered = verdicts.filter((v) => v.giveaway && isQuizzable(v)).length;
 console.log(
   `Done. Of ${verdicts.length} checked images, ${covered} have a giveaway the card covers until the reveal` +
     ` and ${dropped} stay out of the deck. Spent about US$${spent.toFixed(4)}.`,

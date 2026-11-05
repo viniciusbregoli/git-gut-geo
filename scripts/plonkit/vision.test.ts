@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { batchResults, chunkBySize, costOf, isQuizzable, mimeTypeOf, parseVerdict, visionRequest } from './vision.ts';
+import type { Box } from '../../shared/deck.ts';
+import { batchResults, chunkBySize, costOf, coveredArea, isQuizzable, mimeTypeOf, parseVerdict, visionRequest, type Verdict } from './vision.ts';
 
 const answer = (text: string) => ({ candidates: [{ content: { parts: [{ text }] } }] });
 
@@ -23,6 +24,15 @@ describe('parseVerdict', () => {
     const verdict = parseVerdict(answer('{"giveaway":true,"reason":"Map.","covers":[{"box_2d":[500,500,400,900]}]}'));
     expect(verdict).toMatchObject({ giveaway: true, covers: [] });
     expect(isQuizzable(verdict!)).toBe(false);
+  });
+
+  it('keeps a giveaway out when its covers would hide most of the image', () => {
+    const verdict = (covers: Box[]): Verdict => ({ giveaway: true, reason: '', covers, model: 'm', prompt: 2 });
+    const corner = { top: 0.5, left: 0.5, bottom: 1, right: 1 };
+    expect(coveredArea([corner])).toBeCloseTo(0.25);
+    expect(isQuizzable(verdict([corner]))).toBe(true);
+    expect(isQuizzable(verdict([{ top: 0, left: 0, bottom: 0.95, right: 0.98 }]))).toBe(false);
+    expect(isQuizzable(verdict([corner, corner, corner]))).toBe(false);
   });
 
   it('ignores boxes on images that are not giveaways', () => {
