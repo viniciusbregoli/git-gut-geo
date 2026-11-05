@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile, access } from 'node:fs/promises';
+import { access, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import type { Guide, GuideIndexEntry } from '../../shared/plonkit.ts';
 import { isSafeImagePath, type GuideStore } from './sync.ts';
@@ -12,9 +12,13 @@ async function readJson<T>(path: string): Promise<T | null> {
   }
 }
 
-async function writeFileDeep(path: string, data: string | Uint8Array) {
+// Write to a temporary file and rename it, so an interrupted run never leaves a
+// partial file that a later run mistakes for a complete guide or image.
+async function writeFileAtomic(path: string, data: string | Uint8Array) {
   await mkdir(dirname(path), { recursive: true });
-  await writeFile(path, data);
+  const temporary = `${path}.${process.pid}.tmp`;
+  await writeFile(temporary, data);
+  await rename(temporary, path);
 }
 
 /**
@@ -29,15 +33,15 @@ export function fileStore(root: string): GuideStore {
 
   return {
     readIndex: () => readJson<GuideIndexEntry[]>(join(root, 'index.json')),
-    writeIndex: (index) => writeFileDeep(join(root, 'index.json'), `${JSON.stringify(index, null, 2)}\n`),
+    writeIndex: (index) => writeFileAtomic(join(root, 'index.json'), `${JSON.stringify(index, null, 2)}\n`),
     readGuide: (slug) => readJson<Guide>(join(root, 'guides', `${slug}.json`)),
     writeGuide: (guide) =>
-      writeFileDeep(join(root, 'guides', `${guide.slug}.json`), `${JSON.stringify(guide, null, 2)}\n`),
+      writeFileAtomic(join(root, 'guides', `${guide.slug}.json`), `${JSON.stringify(guide, null, 2)}\n`),
     hasImage: (imageUrl) =>
       access(imagePath(imageUrl)).then(
         () => true,
         () => false,
       ),
-    writeImage: (imageUrl, bytes) => writeFileDeep(imagePath(imageUrl), bytes),
+    writeImage: (imageUrl, bytes) => writeFileAtomic(imagePath(imageUrl), bytes),
   };
 }
