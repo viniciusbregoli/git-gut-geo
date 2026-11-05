@@ -34,7 +34,9 @@ function shuffled<T>(items: T[], random: () => number): T[] {
  */
 export function pickOptions(correct: Country, all: Country[], sharesClue: Set<string>, seed: string): Country[] {
   const random = rng(seed);
-  const others = all.filter((c) => c.code !== correct.code);
+  // Plonk It has separate guides for territories (PT-MA, Madeira); never offer one as a wrong answer for its country.
+  const base = (code: string) => code.split('-')[0];
+  const others = all.filter((c) => base(c.code) !== base(correct.code));
   const tiers = [
     others.filter((c) => c.continent === correct.continent && sharesClue.has(c.code)),
     others.filter((c) => c.continent === correct.continent && !sharesClue.has(c.code)),

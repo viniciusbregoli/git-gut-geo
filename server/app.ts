@@ -49,7 +49,7 @@ export function createApp(deps: AppDeps) {
         tier: queued.tier,
         mode: queued.mode,
         isNew: queued.isNew,
-        imageUrl: `/api/images${queued.data.imageUrl}`,
+        imageUrl: `/api${queued.data.imageUrl}`,
       };
       const correct = byCode.get(queued.countryCode);
       if (queued.mode === 'choice' && correct) {

@@ -41,9 +41,10 @@ describe('API', () => {
     const res = await setup().app.request('/api/session');
     const session = (await res.json()) as SessionResponse;
 
-    expect(session.counts).toEqual({ due: 0, newLeft: 4, reviewedToday: 0 });
+    expect(session.counts).toEqual({ cards: 4, due: 0, newLeft: 4, reviewedToday: 0 });
     expect(session.card).toMatchObject({ mode: 'choice', isNew: true, clueType: 'plates' });
     expect(session.card?.options).toHaveLength(4);
+    expect(session.card?.imageUrl).toMatch(/^\/api\/images\/test\/\w+\.png$/);
     expect(JSON.stringify(session.card)).not.toMatch(/purple|orange|teal|grey/);
   });
 

@@ -87,7 +87,9 @@ export function queueCounts(db: Db, now: Date): QueueCounts {
   const reviewed = db
     .prepare('SELECT COUNT(*) AS n FROM reviews WHERE reviewed_at >= ?')
     .get(dayStart(now).getTime()) as { n: number };
+  const cards = db.prepare(`SELECT COUNT(*) AS n FROM cards c WHERE ${ACTIVE}`).get() as { n: number };
   return {
+    cards: cards.n,
     due: due.n,
     newLeft: Math.min(available.n, Math.max(0, NEW_PER_DAY - introducedToday(db, now))),
     reviewedToday: reviewed.n,

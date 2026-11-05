@@ -4,6 +4,8 @@ import type { ClueType, SectionTier } from './plonkit.ts';
 export type AnswerMode = 'choice' | 'map';
 
 export interface QueueCounts {
+  /** Active cards in the deck; 0 means nothing has been fetched yet. */
+  cards: number;
   due: number;
   newLeft: number;
   reviewedToday: number;
