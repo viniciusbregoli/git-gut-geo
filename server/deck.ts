@@ -15,10 +15,12 @@ export function countriesFrom(guides: Guide[]): Country[] {
 /**
  * Cards in curriculum order: country-level tips before region-level ones,
  * then by clue type, then by how common the country is, then guide order.
+ * Tips whose image gives the answer away (see `pnpm check:images`) are left out.
  */
-export function cardsFrom(guides: Guide[]): (DeckCard & { position: number })[] {
+export function cardsFrom(guides: Guide[], giveaways: ReadonlySet<string> = new Set()): (DeckCard & { position: number })[] {
   const cards = guides.flatMap((guide) =>
-    guide.tips.map((tip, index) => {
+    guide.tips.flatMap((tip, index) => {
+      if (giveaways.has(tip.imageUrl)) return [];
       // Reclassify on load, so classifier improvements apply without re-fetching.
       const clueType = classifyTip(tip.tags, tip.text);
       const card: DeckCard = {
@@ -37,7 +39,7 @@ export function cardsFrom(guides: Guide[]): (DeckCard & { position: number })[] 
         },
       };
       const key = [tip.tier === 'country' ? 0 : 1, clueRank(clueType), frequencyRank(guide.code), guide.title, index];
-      return { card, key };
+      return [{ card, key }];
     }),
   );
 
@@ -54,8 +56,8 @@ export function cardsFrom(guides: Guide[]): (DeckCard & { position: number })[] 
 }
 
 /** Upserts the deck and retires cards whose tips no longer exist. Progress is never deleted. */
-export function syncDeck(db: Db, guides: Guide[]): { cards: number; retired: number } {
-  const cards = cardsFrom(guides);
+export function syncDeck(db: Db, guides: Guide[], giveaways?: ReadonlySet<string>): { cards: number; retired: number } {
+  const cards = cardsFrom(guides, giveaways);
   const upsert = db.prepare(`
     INSERT INTO cards (id, kind, country_code, clue_type, tier, position, data, retired)
     VALUES (?, ?, ?, ?, ?, ?, ?, 0)

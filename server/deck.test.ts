@@ -22,6 +22,12 @@ describe('cardsFrom', () => {
     ]);
   });
 
+  it('leaves out tips whose image gives the answer away', () => {
+    const ids = cardsFrom(guides, new Set(['/images/test/b.png'])).map((c) => c.id);
+    expect(ids).not.toContain('tip:testland:b');
+    expect(ids).toHaveLength(3);
+  });
+
   it('reclassifies tips from their text instead of trusting the stored type', () => {
     expect(cardsFrom(guides).find((c) => c.id === 'tip:testland:a')?.clueType).toBe('vegetation');
   });
