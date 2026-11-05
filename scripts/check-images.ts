@@ -29,14 +29,91 @@ const { values } = parseArgs({
   },
 });
 
+function fail(message: string): never {
+  console.error(message);
+  process.exit(1);
+}
+
+const maxUsd = Number(values['max-usd']);
+if (!Number.isFinite(maxUsd) || maxUsd < 0) fail(`--max-usd must be a non-negative number, got "${values['max-usd']}".`);
+const limit = values.limit === undefined ? Infinity : Number(values.limit);
+if (limit !== Infinity && (!Number.isInteger(limit) || limit < 0)) fail(`--limit must be a whole number of 0 or more, got "${values.limit}".`);
+
 const dir = values.dir;
+
+function writeJsonAtomic(path: string, value: unknown) {
+  const temporary = `${path}.${process.pid}.partial`;
+  writeFileSync(temporary, `${JSON.stringify(value, null, 2)}\n`);
+  renameSync(temporary, path);
+}
+
 const cachePath = join(dir, 'vision.json');
 const cache: VerdictCache = existsSync(cachePath) ? JSON.parse(readFileSync(cachePath, 'utf8')) : {};
-const saveCache = () => {
-  const temporary = `${cachePath}.${process.pid}.partial`;
-  writeFileSync(temporary, `${JSON.stringify(cache, null, 2)}\n`);
-  renameSync(temporary, cachePath);
-};
+const saveCache = () => writeJsonAtomic(cachePath, cache);
+
+// Batches already paid for but not collected, by operation name. Saved before waiting,
+// so a run that stops mid-wait picks them up next time instead of submitting them again.
+const outstandingPath = join(dir, 'vision-batches.json');
+let outstanding: string[] = existsSync(outstandingPath) ? JSON.parse(readFileSync(outstandingPath, 'utf8')) : [];
+const saveOutstanding = () => writeJsonAtomic(outstandingPath, outstanding);
+
+const apiKey = process.env.GEMINI_API_KEY;
+
+async function call<T>(url: string, init?: RequestInit): Promise<T> {
+  if (!apiKey) fail('GEMINI_API_KEY is not set.');
+  const res = await fetch(url, { ...init, headers: { 'x-goog-api-key': apiKey, 'content-type': 'application/json' } });
+  const body = (await res.json()) as T & { error?: { message?: string } };
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${body.error?.message ?? 'no message'}`);
+  return body;
+}
+
+interface Operation {
+  done?: boolean;
+  metadata?: { state?: string };
+  response?: { inlinedResponses?: unknown };
+  error?: { message?: string };
+}
+
+let spent = 0;
+
+/** Waits for a batch, stores its verdicts and forgets it. */
+async function collect(name: string, label: string) {
+  let operation: Operation;
+  for (;;) {
+    operation = await call<Operation>(`${API}/${name}`);
+    if (operation.done) break;
+    await new Promise((resolve) => setTimeout(resolve, POLL_MS));
+  }
+
+  let flagged = 0;
+  if (operation.error) {
+    console.log(`${label} failed: ${operation.error.message ?? 'no message'}. Its images are retried next run.`);
+  } else {
+    for (const result of batchResults(operation)) {
+      const imageUrl = result.metadata?.key;
+      const verdict = result.response ? parseVerdict(result.response) : null;
+      if (result.response) spent += costOf(result.response, true);
+      if (!imageUrl || !verdict) {
+        console.log(`${imageUrl ?? '?'}: no verdict (${result.error?.message ?? 'unreadable response'}), retried next run`);
+        continue;
+      }
+      cache[imageUrl] = verdict;
+      if (verdict.giveaway) flagged += 1;
+    }
+    saveCache();
+  }
+  outstanding = outstanding.filter((n) => n !== name);
+  saveOutstanding();
+  if (!operation.error) {
+    console.log(`${label}: ${operation.metadata?.state ?? 'done'}, ${flagged} giveaways, about US$${spent.toFixed(4)} spent so far`);
+  }
+}
+
+if (outstanding.length > 0) {
+  console.log(`${outstanding.length} batches from an earlier run were not collected.`);
+  if (values['dry-run']) process.exit(0);
+  for (const name of [...outstanding]) await collect(name, `Earlier batch ${name}`);
+}
 
 const guides = readdirSync(join(dir, 'guides'))
   .filter((f) => f.endsWith('.json'))
@@ -51,27 +128,13 @@ for (const guide of guides) {
   }
 }
 
-const maxUsd = Number(values['max-usd']);
 const affordable = Math.floor(maxUsd / ESTIMATED_USD_PER_IMAGE);
-const todo = [...pending].slice(0, Math.min(affordable, Number(values.limit ?? Infinity)));
+const todo = [...pending].slice(0, Math.min(affordable, limit));
 console.log(
   `${Object.keys(cache).length} images already checked, ${pending.size} to check.` +
     ` This run: ${todo.length} images, at most about US$${(todo.length * ESTIMATED_USD_PER_IMAGE).toFixed(2)} (cap US$${maxUsd}).`,
 );
 if (values['dry-run'] || todo.length === 0) process.exit(0);
-
-const apiKey = process.env.GEMINI_API_KEY;
-if (!apiKey) {
-  console.error('GEMINI_API_KEY is not set.');
-  process.exit(1);
-}
-
-async function call<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, { ...init, headers: { 'x-goog-api-key': apiKey!, 'content-type': 'application/json' } });
-  const body = (await res.json()) as T & { error?: { message?: string } };
-  if (!res.ok) throw new Error(`HTTP ${res.status}: ${body.error?.message ?? 'no message'}`);
-  return body;
-}
 
 // Chunks are planned from file sizes (base64 is 4/3 of the bytes, plus the prompt),
 // and each chunk's images are read only when it is submitted, so memory holds one batch.
@@ -94,14 +157,6 @@ function requestsFor(chunk: [string, string][]) {
   });
 }
 
-interface Operation {
-  done?: boolean;
-  metadata?: { state?: string };
-  response?: { inlinedResponses?: unknown };
-  error?: { message?: string };
-}
-
-let spent = 0;
 for (const [i, planned] of plan.entries()) {
   const chunk = requestsFor(planned);
   if (chunk.length === 0) continue;
@@ -111,33 +166,10 @@ for (const [i, planned] of plan.entries()) {
       batch: { display_name: `git-gut-geo-images-${i + 1}`, input_config: { requests: { requests: chunk } } },
     }),
   });
+  outstanding.push(created.name);
+  saveOutstanding();
   console.log(`Batch ${i + 1}/${plan.length}: ${chunk.length} images submitted (${created.name})`);
-
-  let operation: Operation;
-  for (;;) {
-    operation = await call<Operation>(`${API}/${created.name}`);
-    if (operation.done) break;
-    await new Promise((resolve) => setTimeout(resolve, POLL_MS));
-  }
-  if (operation.error) {
-    console.log(`Batch ${i + 1} failed: ${operation.error.message ?? 'no message'}. Its images are retried next run.`);
-    continue;
-  }
-
-  let flagged = 0;
-  for (const result of batchResults(operation)) {
-    const imageUrl = result.metadata?.key;
-    const verdict = result.response ? parseVerdict(result.response) : null;
-    if (result.response) spent += costOf(result.response, true);
-    if (!imageUrl || !verdict) {
-      console.log(`${imageUrl ?? '?'}: no verdict (${result.error?.message ?? 'unreadable response'}), retried next run`);
-      continue;
-    }
-    cache[imageUrl] = verdict;
-    if (verdict.giveaway) flagged += 1;
-  }
-  saveCache();
-  console.log(`Batch ${i + 1}: ${operation.metadata?.state ?? 'done'}, ${flagged} giveaways, about US$${spent.toFixed(4)} spent so far`);
+  await collect(created.name, `Batch ${i + 1}`);
 }
 
 const verdicts = Object.values(cache);
