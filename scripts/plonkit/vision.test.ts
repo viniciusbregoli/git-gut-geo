@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Box } from '../../shared/deck.ts';
-import { batchResults, chunkBySize, costOf, coveredArea, isQuizzable, mimeTypeOf, parseVerdict, visionRequest, type Verdict } from './vision.ts';
+import { batchResults, chunkBySize, costOf, coveredArea, coversFor, isQuizzable, mimeTypeOf, parseVerdict, visionRequest, type Verdict } from './vision.ts';
 
 const answer = (text: string) => ({ candidates: [{ content: { parts: [{ text }] } }] });
 
@@ -33,6 +33,18 @@ describe('parseVerdict', () => {
     expect(isQuizzable(verdict([corner]))).toBe(true);
     expect(isQuizzable(verdict([{ top: 0, left: 0, bottom: 0.95, right: 0.98 }]))).toBe(false);
     expect(isQuizzable(verdict([corner, corner, corner]))).toBe(false);
+  });
+
+  it('stretches covers that stop near an edge to that edge', () => {
+    const namibia: Verdict = {
+      giveaway: true,
+      reason: '',
+      covers: [{ top: 0.385, left: 0.69, bottom: 0.982, right: 0.911 }],
+      model: 'm',
+      prompt: 2,
+    };
+    expect(coversFor(namibia)).toEqual([{ top: 0.385, left: 0.69, bottom: 1, right: 1 }]);
+    expect(coversFor({ ...namibia, giveaway: false })).toEqual([]);
   });
 
   it('ignores boxes on images that are not giveaways', () => {

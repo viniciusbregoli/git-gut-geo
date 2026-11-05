@@ -2,7 +2,7 @@ import { clueRank, frequencyRank } from '../shared/curriculum.ts';
 import type { Country, DeckCard } from '../shared/deck.ts';
 import type { Guide } from '../shared/plonkit.ts';
 import { classifyTip } from '../scripts/plonkit/classify.ts';
-import { isQuizzable, type Verdict } from '../scripts/plonkit/vision.ts';
+import { coversFor, isQuizzable, type Verdict } from '../scripts/plonkit/vision.ts';
 import type { Db } from './db.ts';
 
 export const tipCardId = (slug: string, tipId: string) => `tip:${slug}:${tipId}`;
@@ -27,7 +27,7 @@ export function cardsFrom(
     guide.tips.flatMap((tip, index) => {
       const verdict = verdicts.get(tip.imageUrl);
       if (!isQuizzable(verdict)) return [];
-      const covers = verdict?.giveaway ? (verdict.covers ?? []) : [];
+      const covers = coversFor(verdict);
       // Reclassify on load, so classifier improvements apply without re-fetching.
       const clueType = classifyTip(tip.tags, tip.text);
       const card: DeckCard = {

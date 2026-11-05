@@ -40,11 +40,33 @@ export function coveredArea(covers: readonly Box[]): number {
   return covers.reduce((sum, c) => sum + (c.bottom - c.top) * (c.right - c.left), 0);
 }
 
+/**
+ * How close to the image's edge a cover may stop before it is stretched to it.
+ * Locator maps sit against an edge, and the model's box tends to clip thin
+ * parts such as Namibia's Caprivi strip, which then shows past the cover.
+ */
+export const EDGE_SNAP = 0.12;
+
+function snapToEdges(box: Box): Box {
+  return {
+    top: box.top <= EDGE_SNAP ? 0 : box.top,
+    left: box.left <= EDGE_SNAP ? 0 : box.left,
+    bottom: box.bottom >= 1 - EDGE_SNAP ? 1 : box.bottom,
+    right: box.right >= 1 - EDGE_SNAP ? 1 : box.right,
+  };
+}
+
+/** The covers a card shows for this verdict: none unless it is a giveaway, stretched to nearby edges. */
+export function coversFor(verdict: Verdict | undefined): Box[] {
+  if (!verdict?.giveaway) return [];
+  return (verdict.covers ?? []).map(snapToEdges);
+}
+
 /** Whether a tip with this verdict can be a card: no giveaway, or one that can be covered. */
 export function isQuizzable(verdict: Verdict | undefined): boolean {
   if (!verdict || !verdict.giveaway) return true;
   // Verdicts from before covers existed have none, so their giveaways stay out.
-  const covers = verdict.covers ?? [];
+  const covers = coversFor(verdict);
   return covers.length > 0 && coveredArea(covers) <= MAX_COVERED_AREA;
 }
 
