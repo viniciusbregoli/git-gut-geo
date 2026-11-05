@@ -1,6 +1,7 @@
 import { access, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import type { Guide, GuideIndexEntry } from '../../shared/plonkit.ts';
+import { isSafeSlug } from './parse.ts';
 import { isSafeImagePath, type GuideStore } from './sync.ts';
 
 async function readJson<T>(path: string): Promise<T | null> {
@@ -19,11 +20,6 @@ async function writeFileAtomic(path: string, data: string | Uint8Array) {
   const temporary = `${path}.${process.pid}.tmp`;
   await writeFile(temporary, data);
   await rename(temporary, path);
-}
-
-/** Slugs come from fetched pages, so they are checked before becoming file names. */
-export function isSafeSlug(slug: string): boolean {
-  return /^[a-z0-9][a-z0-9-]*$/i.test(slug);
 }
 
 /**

@@ -40,10 +40,16 @@ const isString = (value: unknown): value is string => typeof value === 'string';
 const stringList = (value: unknown): string[] =>
   Array.isArray(value) ? value.filter(isString) : [];
 
+/** Slugs come from the fetched index and become file names, so only plain ones are kept. */
+export function isSafeSlug(slug: string): boolean {
+  return /^[a-z0-9][a-z0-9-]*$/i.test(slug);
+}
+
 function indexEntry(raw: RawIndexEntry | null | undefined): GuideIndexEntry | null {
   if (!raw || typeof raw !== 'object') return null;
   const { title, slug, code, updatedAt } = raw;
   if (!isString(title) || !isString(slug) || !isString(code) || !isString(updatedAt)) return null;
+  if (!isSafeSlug(slug)) return null;
   return { title, slug, code, updatedAt, continent: stringList(raw.cat)[0] ?? 'Unknown' };
 }
 

@@ -3,7 +3,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { Guide } from '../../shared/plonkit.ts';
-import { fileStore, isSafeSlug } from './store.ts';
+import { isSafeSlug } from './parse.ts';
+import { fileStore } from './store.ts';
 
 const guide = (slug: string): Guide => ({
   slug,
