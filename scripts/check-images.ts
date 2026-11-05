@@ -85,8 +85,8 @@ const forget = (name: string) => {
 };
 
 /**
- * Waits for a batch, stores its verdicts and forgets it. Never throws, so one
- * batch's trouble cannot stop the others being collected.
+ * Waits for a batch, stores its verdicts and forgets it. A failed poll never
+ * throws, so one batch's trouble cannot stop the others being collected.
  */
 async function collect(name: string, label: string) {
   let operation: Operation;
@@ -140,6 +140,11 @@ if (outstanding.length > 0) {
   console.log(`${outstanding.length} batches from an earlier run were not collected.`);
   if (values['dry-run']) process.exit(0);
   await Promise.all([...outstanding].map((name) => collect(name, `Earlier batch ${name}`)));
+  // Their images have no verdict yet, so selecting new work now would pay for them twice.
+  if (outstanding.length > 0) {
+    console.log(`${outstanding.length} batches are still not collected. Run again later to pick them up before checking new images.`);
+    process.exit(0);
+  }
 }
 
 const guides = readdirSync(join(dir, 'guides'))
