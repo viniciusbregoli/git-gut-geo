@@ -7,3 +7,4 @@ data/
 .impeccable/review/
 .env
 *.log
+.claude/worktrees/
