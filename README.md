@@ -32,7 +32,10 @@ pnpm fetch:plonkit --force           # re-fetch even if a guide is unchanged
 
 The script reads Plonk It's guide index, then each country page's embedded data, one page every 2 seconds and one image every 250 ms (`--page-delay` and `--image-delay` change these). Images come from the same resize endpoint the site's own pages use, and each one takes a few seconds the first time it is rendered, so a first full run takes a long while. Later runs only fetch guides whose update date changed, plus any image that failed before. Set `FIRECRAWL_URL` (for example `http://127.0.0.1:3002`) to retry pages a plain request cannot read through a self-hosted Firecrawl.
 
-Some guide images answer their own question: a caption naming the country, a coverage map, a comparison labelled "US & Canada" and "Europe". `pnpm check:images` sends each downloaded image once to Gemini (`gemini-3.5-flash-lite`, through the Batch API) and caches the verdicts in `data/plonkit/vision.json`. The server leaves those tips out of the deck on its next start. They stay in the guide for reading.
+Some guide images answer their own question: a caption naming the country, a coverage map, a comparison labelled "US & Canada" and "Europe". Most region tips also carry a small locator map in a corner. `pnpm check:images` sends each downloaded image once to Gemini (`gemini-3.5-flash-lite`, through the Batch API) and caches the verdicts in `data/plonkit/vision.json`. On its next start the server reads them:
+
+- When the giveaway is a small added part (a locator map, a caption, a pasted plate), the card covers it while you answer and uncovers it on the reveal.
+- When the whole image gives the answer away (a full map, a labelled comparison), the tip stays out of the deck. It is still in the guide for reading.
 
 ```sh
 pnpm check:images --dry-run      # how many images are left and the most it would cost
@@ -40,7 +43,7 @@ GEMINI_API_KEY=... pnpm check:images             # stops at US$1 by default
 GEMINI_API_KEY=... pnpm check:images --max-usd 3 # raise the cap
 ```
 
-At list prices one image costs about US$0.0001 in a batch, so the full set of roughly 6,000 images is under a dollar. Images already judged are never sent again. A batch can take a few minutes to start.
+One image costs about US$0.00013 in a batch, so the full set of roughly 6,000 images is under a dollar. The cap counts each image at a higher estimate, so a run stops before spending it. Images already judged are never sent again, unless the prompt changes (`PROMPT_VERSION` in `scripts/plonkit/vision.ts`). A batch can take a few minutes to start.
 
 No fetched Plonk It content is published in this repository.
 
