@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { batchResults, chunkBySize, costOf, mimeTypeOf, parseVerdict, visionRequest } from './vision.ts';
+import { batchResults, chunkBySize, costOf, isQuizzable, mimeTypeOf, parseVerdict, visionRequest } from './vision.ts';
 
 const answer = (text: string) => ({ candidates: [{ content: { parts: [{ text }] } }] });
 
@@ -9,6 +9,26 @@ describe('parseVerdict', () => {
       giveaway: true,
       reason: 'A map of the country.',
     });
+  });
+
+  it('turns 0-1000 boxes into image fractions with a small margin', () => {
+    const verdict = parseVerdict(answer('{"giveaway":true,"reason":"Locator map.","covers":[{"box_2d":[600,700,1000,1000]}]}'));
+    const [box] = verdict!.covers;
+    expect(box!.top).toBeCloseTo(0.585);
+    expect(box!.left).toBeCloseTo(0.685);
+    expect(box).toMatchObject({ bottom: 1, right: 1 });
+  });
+
+  it('treats a giveaway with a malformed box as one that cannot be covered', () => {
+    const verdict = parseVerdict(answer('{"giveaway":true,"reason":"Map.","covers":[{"box_2d":[500,500,400,900]}]}'));
+    expect(verdict).toMatchObject({ giveaway: true, covers: [] });
+    expect(isQuizzable(verdict!)).toBe(false);
+  });
+
+  it('ignores boxes on images that are not giveaways', () => {
+    const verdict = parseVerdict(answer('{"giveaway":false,"reason":"Plates.","covers":[{"box_2d":[0,0,100,100]}]}'));
+    expect(verdict?.covers).toEqual([]);
+    expect(isQuizzable(verdict!)).toBe(true);
   });
 
   it('returns null for empty or malformed answers, so the image is retried', () => {

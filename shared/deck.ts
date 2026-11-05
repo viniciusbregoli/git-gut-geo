@@ -6,6 +6,14 @@ export interface Country {
   continent: string;
 }
 
+/** A region of an image as fractions of its size, from the top left. */
+export interface Box {
+  top: number;
+  left: number;
+  bottom: number;
+  right: number;
+}
+
 /** What a tip card stores in `cards.data`. */
 export interface TipCardData {
   guideSlug: string;
@@ -13,6 +21,8 @@ export interface TipCardData {
   section: string;
   text: string[];
   imageUrl: string;
+  /** Parts of the image that give the answer away, hidden until the reveal. */
+  covers?: Box[];
   sourceUrl: string;
 }
 

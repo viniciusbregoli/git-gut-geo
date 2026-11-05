@@ -10,6 +10,7 @@ import {
   ESTIMATED_USD_PER_IMAGE,
   mimeTypeOf,
   parseVerdict,
+  PROMPT_VERSION,
   visionRequest,
   VISION_MODEL,
   type VerdictCache,
@@ -41,11 +42,11 @@ const guides = readdirSync(join(dir, 'guides'))
   .filter((f) => f.endsWith('.json'))
   .map((f) => JSON.parse(readFileSync(join(dir, 'guides', f), 'utf8')) as Guide);
 
-// One request per image not judged yet. An image shared by several tips is judged once.
+// One request per image not judged yet, or judged by an older prompt. An image shared by several tips is judged once.
 const pending = new Map<string, string>();
 for (const guide of guides) {
   for (const tip of guide.tips) {
-    if (cache[tip.imageUrl] || !isSafeImagePath(tip.imageUrl) || !existsSync(join(dir, tip.imageUrl))) continue;
+    if (cache[tip.imageUrl]?.prompt === PROMPT_VERSION || !isSafeImagePath(tip.imageUrl) || !existsSync(join(dir, tip.imageUrl))) continue;
     pending.set(tip.imageUrl, guide.title);
   }
 }
@@ -127,5 +128,10 @@ for (const [i, chunk] of chunks.entries()) {
   console.log(`Batch ${i + 1}: ${operation.metadata?.state ?? 'done'}, ${flagged} giveaways, about US$${spent.toFixed(4)} spent so far`);
 }
 
-const giveaways = Object.values(cache).filter((v) => v.giveaway).length;
-console.log(`Done. ${giveaways} of ${Object.keys(cache).length} checked images are giveaways. Spent about US$${spent.toFixed(4)}.`);
+const verdicts = Object.values(cache);
+const covered = verdicts.filter((v) => v.giveaway && (v.covers ?? []).length > 0).length;
+const dropped = verdicts.filter((v) => v.giveaway && (v.covers ?? []).length === 0).length;
+console.log(
+  `Done. Of ${verdicts.length} checked images, ${covered} have a giveaway the card covers until the reveal` +
+    ` and ${dropped} stay out of the deck. Spent about US$${spent.toFixed(4)}.`,
+);
